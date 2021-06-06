@@ -111,6 +111,7 @@ view model =
                 , text " | "
                 , a [ href "/three" ] [ text "three" ]
                 ]
+            , Html.node "style" [] [ text "a { font-style: italic; }" ]
             , text ("Current url: " ++ Url.toString model.url)
             , div [ class "grid grid-flow-row grid-cols-1 md:grid-cols-2 gap-4" ]
                 (Array.indexedMap userInputArea model.paragraphs
