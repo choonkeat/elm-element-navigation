@@ -2,7 +2,8 @@ module Main exposing (..)
 
 import Array exposing (Array)
 import Browser
-import Browser.Navigation
+import Ext.Browser
+import Ext.Browser.Navigation
 import Html exposing (Html, a, div, input, p, text, textarea)
 import Html.Attributes exposing (class, href, placeholder, style)
 import Html.Events exposing (onInput)
@@ -13,24 +14,23 @@ import Url
 
 
 main =
-    Browser.application
+    Browser.element
         { init = init
         , view = view
         , update = update
         , subscriptions = subscriptions
-        , onUrlRequest = OnUrlRequest
-        , onUrlChange = OnUrlChange
         }
 
 
 type alias Flags =
-    {}
+    { spaFlags : Ext.Browser.Navigation.SpaFlags
+    }
 
 
 type alias Model =
     { bootAt : Maybe Time.Posix
     , paragraphs : Array String
-    , navKey : Browser.Navigation.Key
+    , navKey : Ext.Browser.Navigation.Key
     , url : Url.Url
     }
 
@@ -38,12 +38,16 @@ type alias Model =
 type Msg
     = TimeInput Time.Posix
     | UserInput Int String
-    | OnUrlRequest Browser.UrlRequest
+    | OnUrlRequest Ext.Browser.UrlRequest
     | OnUrlChange Url.Url
 
 
-init : Flags -> Url.Url -> Browser.Navigation.Key -> ( Model, Cmd Msg )
-init flags url navKey =
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    let
+        { url, navKey } =
+            Ext.Browser.Navigation.spaFlags flags
+    in
     ( { bootAt = Nothing
       , paragraphs = Array.fromList [ "" ]
       , url = url
@@ -55,20 +59,23 @@ init flags url navKey =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    Sub.batch
+        [ Ext.Browser.Navigation.onUrlRequest OnUrlRequest
+        , Ext.Browser.Navigation.onUrlChange OnUrlChange
+        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        OnUrlRequest (Browser.Internal url) ->
+        OnUrlRequest (Ext.Browser.Internal url) ->
             ( model
-            , Browser.Navigation.pushUrl model.navKey (Url.toString url)
+            , Ext.Browser.Navigation.pushUrl model.navKey (Url.toString url)
             )
 
-        OnUrlRequest (Browser.External urlString) ->
+        OnUrlRequest (Ext.Browser.External urlString) ->
             ( model
-            , Browser.Navigation.load urlString
+            , Ext.Browser.Navigation.load urlString
             )
 
         OnUrlChange url ->
@@ -95,13 +102,13 @@ update msg model =
                         Array.set index newContent model.paragraphs
             in
             ( { model | paragraphs = newParagraphs }
-            , Cmd.none
+            , Ext.Browser.setPageTitle ("Paragraphs: " ++ String.fromInt (Array.length model.paragraphs))
             )
 
 
-view : Model -> Browser.Document Msg
+view : Model -> Html Msg
 view model =
-    Browser.Document ("Paragraphs: " ++ String.fromInt (Array.length model.paragraphs))
+    div []
         [ div [ class "m-8 md:m-32" ]
             [ div []
                 [ text "Nav links: "
