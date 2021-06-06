@@ -2,6 +2,7 @@ port module Ext.Browser exposing
     ( Location
     , UrlRequest(..)
     , setPageTitle
+    , style
     , urlFromLocation
     )
 
@@ -63,3 +64,8 @@ urlFromLocation location =
 
 
 port setPageTitle : String -> Cmd msg
+
+
+style : List (Html.Attribute msg) -> List (Html.Html msg) -> Html.Html msg
+style attr child =
+    Html.div [] [ Html.node "style" attr child ]
