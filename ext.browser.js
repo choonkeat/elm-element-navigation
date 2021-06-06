@@ -53,4 +53,33 @@ function extBrowserSetup(app, spaFlags, document, ele) {
     if (app.ports.setPageTitle) app.ports.setPageTitle.subscribe(function(pageTitle) {
         if (cachedPageTitle !== pageTitle) document.title = cachedPageTitle = pageTitle;
     });
+
+    // against more aggressive extensions, we may need to detect their presence
+    // and move their nodes to the back of the parent node to avoid tripping up the virtual dom
+    //
+    function badNode(n) {
+        return (
+            // please extend this list...
+            "GRAMMARLY-EXTENSION" === n.tagName ||
+            "StayFocusd-infobar" === n.id ||
+            (n.className && n.className.match(/cvox_indicator_container/))
+        );
+    }
+    const config = { attributes: false, childList: true, subtree: true };
+    const callback = function(mutationsList, observer) {
+        for (var i in mutationsList) {
+            let m = mutationsList[i];
+            for (var j = (m.addedNodes.length-1); j >= 0; j--) {
+                let n = m.addedNodes[j];
+                if (n.movedByMutationObserver) continue;
+                if (badNode(n)) {
+                    console.log('moved', n);
+                    n.movedByMutationObserver = true;
+                    m.target.appendChild(n)
+                }
+            }
+        }
+    };
+    const observer = new MutationObserver(callback);
+    observer.observe(ele, config);
 }
