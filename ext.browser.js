@@ -21,7 +21,7 @@ function extBrowserSetup(app, spaFlags, document, ele) {
     ele.addEventListener("click", function(event) {
         if (event.metaKey || event.ctrlKey) return;
         if (! (event.target && event.target.href)) return;
-        if (! isChild(event.target)) return;
+        if (event.target.target || !isChild(event.target)) return;
         event.preventDefault();
         app.ports.onLocationRequest.send([locationObject(window.location), locationObject(event.target)]);
     }, false);
