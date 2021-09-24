@@ -18,12 +18,18 @@ function extBrowserSetup(app, spaFlags, document, ele) {
         if (node === ele) return true;
         return (node && isChild(node.parentNode));
     }
+    // elm only handles http https links. e.g. leave mailto: alone
+    function httpxNode(node) {
+        if (!node || (node.href && node.href.startsWith('http'))) return node;
+        return httpxNode(node.parentNode);
+    }
     ele.addEventListener("click", function(event) {
         if (event.metaKey || event.ctrlKey) return;
-        if (! (event.target && event.target.href)) return;
-        if (event.target.target || !isChild(event.target)) return;
+        const anchorTag = httpxNode(event.target);
+        if (!anchorTag) return;
+        if (anchorTag.target || !isChild(anchorTag)) return;
         event.preventDefault();
-        app.ports.onLocationRequest.send([locationObject(window.location), locationObject(event.target)]);
+        app.ports.onLocationRequest.send([locationObject(window.location), locationObject(anchorTag)]);
     }, false);
     window.addEventListener("popstate", function(event) {
         app.ports.onLocationChange.send(locationObject(window.location));
