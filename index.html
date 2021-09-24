@@ -4,14 +4,22 @@
   <meta charset="UTF-8">
   <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
   <title>Main</title>
+  <script src="/ext.browser.js"></script>
   <script src="/output.js"></script>
 </head>
 <body>
-    <div id="elm"></div>
+    <div id="elmIsolation">
+        <div id="elm"></div>
+    </div>
     <script>
+      var spaFlags = generateSpaFlags()
       var app = Elm.Main.init({
+          flags:
+              { spaFlags: spaFlags
+              },
           node: document.getElementById("elm")
       });
+      extBrowserSetup(app, spaFlags, document, document.getElementById("elmIsolation"));
     </script>
 </body>
 </html>
